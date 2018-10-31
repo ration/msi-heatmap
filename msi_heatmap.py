@@ -98,7 +98,7 @@ def to_linux_event_map(map):
     new_dict = defaultdict(list)
     for k, v in linux_keys.items():
         # TODO ??
-        if k == 0 or k == 187:
+        if k == 0 or k >= 187:
             continue
         new_dict[v].append(k)
     return dict(new_dict.items())
