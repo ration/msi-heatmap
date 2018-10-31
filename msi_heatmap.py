@@ -3,13 +3,49 @@ import argparse
 import subprocess
 import time
 from collections import defaultdict
+import pyxhook
 
 import Xlib.display
 import Xlib.XK
 
-from key_logger import KeyLogger
-
 display = Xlib.display.Display()
+
+
+class KeyLogger:
+    """ This class capture the keystrokes. I hope you understand the implications of this :)
+    """
+
+    def __init__(self, expire_time_s=60 * 60):
+        self.new_hook = pyxhook.HookManager()
+        self.new_hook.KeyDown = self.on_key
+        self.new_hook.HookKeyboard()
+        self.new_hook.start()
+        self.counter = KeyCounter(expire_time_s)
+
+    def on_key(self, event):
+        self.counter.press(event.Key)
+
+    def stats(self):
+        return self.counter.press_counts()
+
+
+class KeyCounter:
+    def __init__(self, expire_time=30):
+        self.expire_time = expire_time
+        self.counter = {}
+
+    def press(self, ch):
+        if ch not in self.counter:
+            self.counter[ch] = []
+        self.counter[ch].append(time.time())
+
+    def evict(self):
+        for key, value in self.counter.items():
+            self.counter[key] = list(filter(lambda x: x > time.time() - self.expire_time, value))
+
+    def press_counts(self):
+        self.evict()
+        return {key: len(value) for key, value in self.counter.items()}
 
 
 class Colors:
@@ -71,9 +107,11 @@ def to_linux_event_map(map):
 def main():
     parser = argparse.ArgumentParser(description='Heatmap for key presses')
     parser.add_argument('-c', '--color', action='store', default='ffe6e6', help='Base color for keys')
-    parser.add_argument('-g', '--end-color', action='store', default='ff0000', help='Base color for keys')
+    parser.add_argument('-g', '--end-color', action='store', default='ff0000',
+                        help='The color for the most intense key')
 
-    parser.add_argument('-e', '--expire-time', action='store', default=60 * 60, help='Expire time of keystrokes')
+    parser.add_argument('-e', '--expire-time', action='store', default=60 * 60,
+                        help='Expire time of keystrokes (seconds)')
     parser.add_argument('-u', '--update-interval', action='store', default=30, help='Update interval of keyboard')
 
     args = parser.parse_args()
