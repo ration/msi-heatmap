@@ -7,3 +7,4 @@ Just run msi_heatmap.py and keep it running. See --help for options.
 Requirements:
 python3-xlib
 pip pyxhook
+https://github.com/Askannz/msi-perkeyrgb
