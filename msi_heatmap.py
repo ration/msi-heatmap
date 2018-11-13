@@ -120,9 +120,9 @@ def main():
     ConfigWriter.reset_config(cfg_file, args.color)
     change_color(cfg_file)
 
-    logger = KeyLogger(args.expire_time)
+    logger = KeyLogger(int(args.expire_time))
     while True:
-        time.sleep(args.update_interval)
+        time.sleep(int(args.update_interval))
         stats = logger.stats()
         cfg = to_linux_event_map(stats)
         ConfigWriter.write_config(cfg_file, args.color, args.end_color, cfg)
